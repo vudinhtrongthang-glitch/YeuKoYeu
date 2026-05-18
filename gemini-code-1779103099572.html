@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient Monument Flowers - Zen Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, #FFD1C1, #FF9B9B, #D087D2);
+        }
+
+        #bg-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #A8E6CF, #3D84A8, #182848);
+            opacity: 0;
+            transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        body.alt-bg #bg-overlay {
+            opacity: 1;
+        }
+
+        #app-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        #flower-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+
+        /* --- NHỤY HOA (Màu sắc tương phản mạnh) --- */
+        #flower-center {
+            position: absolute;
+            z-index: 10;
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Cam cháy (Tương phản cánh trắng) */
+        .center-diamond { width: 50px; height: 50px; background: linear-gradient(135deg, #FFD166, #F4A261); transform: rotate(45deg); } 
+        /* Xanh Teal đậm (Tương phản cánh be/vàng) */
+        .center-hexagon { width: 60px; height: 70px; background: linear-gradient(to right, #264653, #2A9D8F); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); } 
+        /* Đỏ San hô (Tương phản cánh xanh lam) */
+        .center-square { width: 45px; height: 45px; background: linear-gradient(45deg, #E76F51, #D62828); border-radius: 8px; }
+        /* Xanh ngọc (Tương phản cánh hồng/đào) */
+        .center-circle { width: 55px; height: 55px; background: radial-gradient(circle, #48CAE4, #0077B6); border-radius: 50%; }
+
+        /* --- KHUNG CÁNH HOA (Xoay cực kỳ chậm) --- */
+        #petals-container {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            z-index: 5;
+            /* Giảm tốc độ xoay xuống 200s/vòng (rất chậm) */
+            animation: super-slow-spin 200s linear infinite;
+        }
+
+        @keyframes super-slow-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- CÁNH HOA --- */
+        .petal {
+            position: absolute;
+            bottom: 0;
+            transform-origin: center bottom;
+            transition: filter 0.3s ease;
+        }
+
+        .petal.petal-geo-a { width: 36px; height: 130px; background: linear-gradient(to right, #F9F8F8 50%, #E3E3E3 50%); clip-path: polygon(50% 0%, 100% 100%, 0% 100%); left: -18px; }
+        .petal.petal-geo-b { width: 30px; height: 120px; background: linear-gradient(to right, #F5E9CE 50%, #D5B990 50%); clip-path: polygon(50% 0%, 100% 20%, 100% 100%, 0 100%, 0 20%); left: -15px; }
+        .petal.petal-geo-c { width: 22px; height: 140px; background: linear-gradient(to right, #48CAE4 50%, #0096C7 50%); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); left: -11px; }
+        .petal.petal-geo-d { width: 40px; height: 110px; background: linear-gradient(to right, #FFD1C1 50%, #FF9B9B 50%); border-radius: 50px 50px 0 0; left: -20px; }
+
+        /* --- HẠT (PARTICLES) --- */
+        .particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: #FFF;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 6px #FFF, 0 0 12px rgba(255,255,255,0.8);
+        }
+
+        /* --- ANIMATIONS --- */
+        .blooming {
+            animation: ethereal-bloom 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes ethereal-bloom {
+            0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .soft-pop-animation {
+            animation: soft-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes soft-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); } 
+            100% { transform: scale(1); }
+        }
+
+        /* Hiệu ứng tan biến nới lỏng (Văng ra, lơ lửng nhìn rõ, rồi mới mờ hẳn) */
+        .fading {
+            pointer-events: none;
+            animation: pluck-and-fade 1.4s ease-out forwards;
+        }
+
+        @keyframes pluck-and-fade {
+            0% { opacity: 1; transform: rotate(var(--init-angle)) translateY(0) scale(1); filter: blur(0); }
+            35% { opacity: 1; transform: rotate(calc(var(--init-angle) + 4deg)) translateY(-45px) scale(0.95); filter: blur(0); } /* Bật rõ ra ngoài và giữ nguyên độ nét */
+            75% { opacity: 0.7; transform: rotate(calc(var(--init-angle) + 8deg)) translateY(-65px) scale(0.85); filter: blur(2px); } /* Bắt đầu mờ từ từ */
+            100% { opacity: 0; transform: rotate(calc(var(--init-angle) + 12deg)) translateY(-90px) scale(0.7); filter: blur(6px); } /* Tan biến vào không gian */
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-overlay"></div>
+
+    <div id="app-container">
+        <div id="flower-wrapper">
+            <div id="flower-center"></div>
+            <div id="petals-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const body = document.body;
+        const appContainer = document.getElementById('app-container');
+        const flowerWrapper = document.getElementById('flower-wrapper');
+        const flowerCenter = document.getElementById('flower-center');
+        const petalsContainer = document.getElementById('petals-container');
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        let padStarted = false;
+
+        // Đã bỏ loại hoa ngôi sao 5 cánh, chỉ còn 4 loại
+        const FLOWER_TYPES = [
+            { id: 'ida', centerClass: 'center-diamond', petalClass: 'petal-geo-a', minPetals: 8, maxPetals: 12 },
+            { id: 'totem', centerClass: 'center-hexagon', petalClass: 'petal-geo-b', minPetals: 12, maxPetals: 16 },
+            { id: 'water', centerClass: 'center-square', petalClass: 'petal-geo-c', minPetals: 16, maxPetals: 24 },
+            { id: 'arch', centerClass: 'center-circle', petalClass: 'petal-geo-d', minPetals: 10, maxPetals: 14 }
+        ];
+
+        let currentPetals = [];
+        let isAltBg = false;
+        let isBlooming = false;
+
+        function init() {
+            body.addEventListener('click', handleScreenTap);
+            body.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleScreenTap();
+            }, { passive: false });
+            
+            spawnNewFlower();
+        }
+
+        function startPadMusic() {
+            if (padStarted) return;
+            padStarted = true;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const frequencies = [130.81, 196.00, 246.94, 293.66, 392.00]; 
+            
+            frequencies.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = index % 2 === 0 ? 'sine' : 'triangle';
+                osc.frequency.value = freq;
+                
+                const lfo = audioCtx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.value = 0.05 + Math.random() * 0.1; 
+                const lfoGain = audioCtx.createGain();
+                lfoGain.gain.value = 0.02; 
+                
+                lfo.connect(lfoGain);
+                lfoGain.connect(gain.gain);
+                
+                gain.gain.value = 0.03; 
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                lfo.start();
+            });
+        }
+
+        // Âm thanh Nhạc cụ Mallet (Marimba/Vibraphone)
+        function playMalletSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const t = audioCtx.currentTime;
+            const freq = 300 + Math.random() * 300; 
+
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(freq, t);
+            
+            gain1.gain.setValueAtTime(0, t);
+            gain1.gain.linearRampToValueAtTime(0.7, t + 0.005);
+            gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.35); 
+
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            osc1.start(t);
+            osc1.stop(t + 0.4);
+
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(freq * 3.9, t); 
+            
+            gain2.gain.setValueAtTime(0, t);
+            gain2.gain.linearRampToValueAtTime(0.2, t + 0.002);
+            gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.1); 
+
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start(t);
+            osc2.stop(t + 0.15);
+        }
+
+        function spawnParticles(angle) {
+            const rad = (angle - 90) * Math.PI / 180;
+            const distance = 40; 
+            
+            for(let i = 0; i < 4; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                petalsContainer.appendChild(particle);
+
+                const spread = (Math.random() - 0.5) * 1.5; 
+                const pRad = rad + spread;
+                const travelDistance = 40 + Math.random() * 60; 
+                
+                const endX = Math.cos(pRad) * travelDistance;
+                const endY = Math.sin(pRad) * travelDistance;
+                const startX = Math.cos(rad) * distance;
+                const startY = Math.sin(rad) * distance;
+
+                particle.style.left = `calc(50% + ${startX}px)`;
+                particle.style.top = `calc(50% + ${startY}px)`;
+
+                particle.animate([
+                    { transform: `translate(-50%, -50%) scale(1)`, opacity: 1 },
+                    { transform: `translate(calc(-50% + ${endX}px), calc(-50% + ${endY}px)) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 500 + Math.random() * 300,
+                    easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        function handleScreenTap() {
+            startPadMusic(); 
+            
+            if (isBlooming) return;
+
+            if (currentPetals.length > 0) {
+                pluckPetal();
+            } else {
+                spawnNewFlower();
+            }
+        }
+
+        function spawnNewFlower() {
+            isBlooming = true;
+            petalsContainer.innerHTML = '';
+            currentPetals = [];
+            
+            const currentType = FLOWER_TYPES[Math.floor(Math.random() * FLOWER_TYPES.length)];
+            const numPetals = Math.floor(Math.random() * (currentType.maxPetals - currentType.minPetals + 1)) + currentType.minPetals;
+
+            flowerCenter.className = ''; 
+            flowerCenter.classList.add(currentType.centerClass);
+
+            const angleStep = 360 / numPetals;
+            
+            for (let i = 0; i < numPetals; i++) {
+                const petal = document.createElement('div');
+                petal.classList.add('petal', currentType.petalClass);
+                
+                const currentAngle = i * angleStep;
+                petal.style.transform = `rotate(${currentAngle}deg)`;
+                petal.dataset.angle = currentAngle;
+                
+                petalsContainer.appendChild(petal);
+                currentPetals.push(petal);
+            }
+
+            flowerWrapper.classList.remove('soft-pop-animation');
+            flowerWrapper.classList.remove('blooming');
+            void flowerWrapper.offsetWidth; 
+            flowerWrapper.classList.add('blooming');
+
+            if (currentType.id === 'ida') {
+                flowerCenter.style.transform = "rotate(45deg)";
+            } else {
+                flowerCenter.style.transform = "rotate(0deg)";
+            }
+
+            setTimeout(() => { isBlooming = false; }, 1200);
+        }
+
+        function pluckPetal() {
+            playMalletSound(); 
+
+            isAltBg = !isAltBg;
+            if (isAltBg) body.classList.add('alt-bg');
+            else body.classList.remove('alt-bg');
+
+            flowerWrapper.classList.remove('soft-pop-animation');
+            void flowerWrapper.offsetWidth;
+            flowerWrapper.classList.add('soft-pop-animation');
+
+            const randomIndex = Math.floor(Math.random() * currentPetals.length);
+            const petalToPluck = currentPetals.splice(randomIndex, 1)[0];
+            
+            const angle = parseFloat(petalToPluck.dataset.angle);
+
+            petalToPluck.style.setProperty('--init-angle', `${angle}deg`);
+            petalToPluck.classList.add('fading');
+
+            spawnParticles(angle);
+
+            // Thời gian xóa Node tương ứng với animation fade dài hơn (1.4s)
+            setTimeout(() => {
+                if (petalToPluck.parentNode) {
+                    petalToPluck.parentNode.removeChild(petalToPluck);
+                }
+            }, 1400); 
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
