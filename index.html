@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ambient Monument Flowers - Zero Lag</title>
+    <title>YeuKoYeu</title>
     <style>
         * {
             box-sizing: border-box;
-            /* Tắt dấu đen/xám (tap highlight) nhấp nháy trên mobile khi chạm */
             -webkit-tap-highlight-color: transparent;
         }
         
@@ -19,9 +18,10 @@
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none; /* Khóa hoàn toàn các thao tác vuốt/zoom của trình duyệt để chống lag */
+            touch-action: none; 
             background: linear-gradient(135deg, #FFD1C1, #FF9B9B, #D087D2);
             cursor: default; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
 
         #bg-overlay {
@@ -56,10 +56,10 @@
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
         }
 
-        /* --- NHỤY HOA --- */
+        /* --- NHỤY HOA (Z-index cao nhất để đè lên các lớp cánh) --- */
         #flower-center {
             position: absolute;
-            z-index: 10;
+            z-index: 15;
             transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
@@ -67,8 +67,10 @@
         .center-hexagon { width: 60px; height: 70px; background: linear-gradient(to right, #264653, #2A9D8F); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); } 
         .center-square { width: 45px; height: 45px; background: linear-gradient(45deg, #E76F51, #D62828); border-radius: 8px; }
         .center-circle { width: 55px; height: 55px; background: radial-gradient(circle, #48CAE4, #0077B6); border-radius: 50%; }
+        /* Nhụy của hoa nhiều lớp cánh */
+        .center-layered { width: 40px; height: 40px; background: radial-gradient(circle, #FFFFFF 20%, #FFD166 50%, #264653 90%); border-radius: 50%; }
 
-        /* --- KHUNG CÁNH HOA --- */
+        /* --- KHUNG CÁNH HOA (Xoay cực kỳ chậm) --- */
         #petals-container {
             position: absolute;
             width: 1px;
@@ -82,7 +84,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* --- CÁNH HOA --- */
+        /* --- CÁNH HOA NGUYÊN BẢN --- */
         .petal {
             position: absolute;
             bottom: 0;
@@ -95,10 +97,28 @@
             filter: brightness(1.1);
         }
 
-        .petal.petal-geo-a { width: 36px; height: 130px; background: linear-gradient(to right, #F9F8F8 50%, #E3E3E3 50%); clip-path: polygon(50% 0%, 100% 100%, 0% 100%); left: -18px; }
-        .petal.petal-geo-b { width: 30px; height: 120px; background: linear-gradient(to right, #F5E9CE 50%, #D5B990 50%); clip-path: polygon(50% 0%, 100% 20%, 100% 100%, 0 100%, 0 20%); left: -15px; }
-        .petal.petal-geo-c { width: 22px; height: 140px; background: linear-gradient(to right, #48CAE4 50%, #0096C7 50%); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); left: -11px; }
-        .petal.petal-geo-d { width: 40px; height: 110px; background: linear-gradient(to right, #FFD1C1 50%, #FF9B9B 50%); border-radius: 50px 50px 0 0; left: -20px; }
+        .petal.petal-geo-a { width: 36px; height: 130px; background: linear-gradient(to right, #F9F8F8 50%, #E3E3E3 50%); clip-path: polygon(50% 0%, 100% 100%, 0% 100%); left: -18px; z-index: 6; }
+        .petal.petal-geo-b { width: 30px; height: 120px; background: linear-gradient(to right, #F5E9CE 50%, #D5B990 50%); clip-path: polygon(50% 0%, 100% 20%, 100% 100%, 0 100%, 0 20%); left: -15px; z-index: 6; }
+        .petal.petal-geo-c { width: 22px; height: 140px; background: linear-gradient(to right, #48CAE4 50%, #0096C7 50%); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); left: -11px; z-index: 6; }
+        .petal.petal-geo-d { width: 40px; height: 110px; background: linear-gradient(to right, #FFD1C1 50%, #FF9B9B 50%); border-radius: 50px 50px 0 0; left: -20px; z-index: 6; }
+
+        /* --- CÁNH HOA NHIỀU LỚP (MỚI) --- */
+        /* Lớp cánh ngoài (To bản, màu tím Monument) */
+        .petal.petal-geo-e-outer { 
+            width: 36px; height: 135px; 
+            background: linear-gradient(to right, #D087D2 50%, #A55EA8 50%); 
+            clip-path: polygon(50% 0%, 100% 70%, 50% 100%, 0% 70%); 
+            left: -18px; 
+            z-index: 5; /* Nằm dưới */
+        }
+        /* Lớp cánh trong (Nhỏ hơn, so le, màu hồng cam rực rỡ) */
+        .petal.petal-geo-e-inner { 
+            width: 26px; height: 95px; 
+            background: linear-gradient(to right, #FF9B9B 50%, #E26D6D 50%); 
+            clip-path: polygon(50% 0%, 100% 70%, 50% 100%, 0% 70%); 
+            left: -13px; 
+            z-index: 7; /* Nằm trên lớp ngoài */
+        }
 
         /* --- HẠT (PARTICLES) --- */
         .particle {
@@ -113,7 +133,7 @@
 
         /* --- ANIMATIONS --- */
         .blooming {
-            animation: ethereal-bloom 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: ethereal-bloom 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
         @keyframes ethereal-bloom {
@@ -164,19 +184,23 @@
         const audioCtx = new AudioContext();
         let padStarted = false;
 
+        // Cập nhật danh sách lên 5 loại hoa (bổ sung hoa nhiều lớp 'layered')
         const FLOWER_TYPES = [
             { id: 'ida', centerClass: 'center-diamond', petalClass: 'petal-geo-a', minPetals: 8, maxPetals: 12 },
             { id: 'totem', centerClass: 'center-hexagon', petalClass: 'petal-geo-b', minPetals: 12, maxPetals: 16 },
             { id: 'water', centerClass: 'center-square', petalClass: 'petal-geo-c', minPetals: 16, maxPetals: 24 },
-            { id: 'arch', centerClass: 'center-circle', petalClass: 'petal-geo-d', minPetals: 10, maxPetals: 14 }
+            { id: 'arch', centerClass: 'center-circle', petalClass: 'petal-geo-d', minPetals: 10, maxPetals: 14 },
+            { id: 'layered', centerClass: 'center-layered', petalClass: 'petal-geo-e', minPetals: 10, maxPetals: 14, isLayered: true }
         ];
 
         let currentPetals = [];
         let isAltBg = false;
         let isBlooming = false;
+        let lastFlowerId = ''; // Biến ghi nhớ loại hoa trước đó để chống trùng lặp liên tiếp
 
         function init() {
-            // Thay vì dùng click/touchstart, dùng pointerdown để phản hồi tức thời (0 trễ nhịp)
+            spawnNewFlower();
+
             body.addEventListener('pointerdown', (e) => {
                 startPadMusic();
                 if (isBlooming) return;
@@ -185,8 +209,6 @@
                     spawnNewFlower();
                 }
             });
-            
-            spawnNewFlower();
         }
 
         function startPadMusic() {
@@ -288,13 +310,36 @@
             }
         }
 
+        // Hàm phụ hỗ trợ tạo phần tử cánh hoa lẻ phục vụ kiến trúc nhiều lớp
+        function createPetalElement(angle, petalClass) {
+            const petal = document.createElement('div');
+            petal.classList.add('petal', petalClass);
+            petal.style.transform = `rotate(${angle}deg)`;
+            petal.dataset.angle = angle;
+            
+            petal.addEventListener('pointerdown', (e) => {
+                e.stopPropagation(); 
+                e.preventDefault(); 
+                startPadMusic();
+                if (isBlooming) return;
+                pluckPetal(petal);
+            });
+
+            petalsContainer.appendChild(petal);
+            currentPetals.push(petal);
+        }
+
         function spawnNewFlower() {
             isBlooming = true;
             petalsContainer.innerHTML = '';
             currentPetals = [];
             body.style.cursor = 'default'; 
             
-            const currentType = FLOWER_TYPES[Math.floor(Math.random() * FLOWER_TYPES.length)];
+            // THUẬT TOÁN CHỐNG LẶP: Lọc bỏ loại hoa vừa xuất hiện ở lượt trước
+            const availableTypes = FLOWER_TYPES.filter(type => type.id !== lastFlowerId);
+            const currentType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            lastFlowerId = currentType.id; // Ghi nhớ lại cho lượt sau
+
             const numPetals = Math.floor(Math.random() * (currentType.maxPetals - currentType.minPetals + 1)) + currentType.minPetals;
 
             flowerCenter.className = ''; 
@@ -302,25 +347,21 @@
 
             const angleStep = 360 / numPetals;
             
-            for (let i = 0; i < numPetals; i++) {
-                const petal = document.createElement('div');
-                petal.classList.add('petal', currentType.petalClass);
-                
-                const currentAngle = i * angleStep;
-                petal.style.transform = `rotate(${currentAngle}deg)`;
-                petal.dataset.angle = currentAngle;
-                
-                // Sử dụng pointerdown thay cho click để loại bỏ delay 300ms
-                petal.addEventListener('pointerdown', (e) => {
-                    e.stopPropagation(); 
-                    e.preventDefault(); // Ngăn hành vi mặc định gây trễ
-                    startPadMusic();
-                    if (isBlooming) return;
-                    pluckPetal(petal);
-                });
-
-                petalsContainer.appendChild(petal);
-                currentPetals.push(petal);
+            // Xử lý render cánh hoa dựa trên việc loại hoa đó có nhiều lớp hay không
+            if (currentType.isLayered) {
+                // Lớp cánh NGOÀI (Base)
+                for (let i = 0; i < numPetals; i++) {
+                    createPetalElement(i * angleStep, 'petal-geo-e-outer');
+                }
+                // Lớp cánh TRONG (So le góc một nửa chu kỳ bước góc để đan xen kẽ nhau)
+                for (let i = 0; i < numPetals; i++) {
+                    createPetalElement(i * angleStep + (angleStep / 2), 'petal-geo-e-inner');
+                }
+            } else {
+                // Hoa 1 lớp cánh bình thường
+                for (let i = 0; i < numPetals; i++) {
+                    createPetalElement(i * angleStep, currentType.petalClass);
+                }
             }
 
             flowerWrapper.classList.remove('soft-pop-animation');
@@ -334,7 +375,7 @@
                 flowerCenter.style.transform = "rotate(0deg)";
             }
 
-            setTimeout(() => { isBlooming = false; }, 1200);
+            setTimeout(() => { isBlooming = false; }, 1500);
         }
 
         function pluckPetal(targetPetal) {
